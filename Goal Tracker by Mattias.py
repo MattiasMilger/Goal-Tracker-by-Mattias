@@ -56,8 +56,8 @@ class GoalTrackerApp:
 
         new_goal = Goal(title, description, recurrence)
         self.active_goals.append(new_goal)
-        
         self.update_goals_list()
+        self.manage_goal(new_goal)  # Automatically move to the manage goal UI
 
     def choose_recurrence(self):
         """Opens a dialog to choose recurrence using buttons."""
@@ -100,25 +100,11 @@ class GoalTrackerApp:
         self.delete_button.config(state=tk.NORMAL)
 
     def edit_goal(self):
-        title = simpledialog.askstring("Edit Goal Title", "Enter the new title:", initialvalue=self.selected_goal.title)
-        if title:
-            self.selected_goal.title = title
-        
-        description = simpledialog.askstring("Edit Goal Description", "Enter the new description:", initialvalue=self.selected_goal.description)
-        if description is not None:
-            self.selected_goal.description = description
+        self.manage_goal(self.selected_goal)
 
-        recurrence = self.choose_recurrence()
-        if recurrence:
-            self.selected_goal.recurrence = recurrence
-
-        self.manage_tasks(self.selected_goal)
-
-        self.update_goals_list()
-
-    def manage_tasks(self, goal):
-        task_window = Toplevel(self.root)
-        task_window.title(f"Manage Tasks for '{goal.title}'")
+    def manage_goal(self, goal):
+        goal_window = Toplevel(self.root)
+        goal_window.title("Manage Goal")
 
         def update_task_listbox():
             tasks_listbox.delete(0, tk.END)
@@ -152,12 +138,40 @@ class GoalTrackerApp:
                 del goal.tasks[selected_task_index[0]]
                 update_task_listbox()
 
-        tasks_listbox = tk.Listbox(task_window, width=40)
+        def save_changes():
+            # Update goal title and description
+            updated_title = title_entry.get()
+            updated_description = description_text.get("1.0", tk.END).strip()
+            if updated_title:
+                goal.title = updated_title
+            goal.description = updated_description
+
+            # Update the goal list in the main UI
+            self.update_goals_list()
+            goal_window.destroy()
+
+        # UI for goal title
+        tk.Label(goal_window, text="Goal Title:", font=("Arial", 12)).pack(pady=5)
+        title_entry = tk.Entry(goal_window, width=50)
+        title_entry.insert(0, goal.title)
+        title_entry.pack(pady=5)
+
+        # UI for goal description
+        tk.Label(goal_window, text="Goal Description:", font=("Arial", 12)).pack(pady=5)
+        description_text = tk.Text(goal_window, width=50, height=5)
+        description_text.insert("1.0", goal.description)
+        description_text.pack(pady=5)
+
+        # UI for tasks
+        tasks_listbox = tk.Listbox(goal_window, width=40)
         tasks_listbox.pack(pady=10)
 
-        tk.Button(task_window, text="Add Task", command=add_task).pack(fill=tk.X)
-        tk.Button(task_window, text="Edit Task", command=edit_task).pack(fill=tk.X)
-        tk.Button(task_window, text="Remove Task", command=remove_task).pack(fill=tk.X)
+        tk.Button(goal_window, text="Add Task", command=add_task).pack(fill=tk.X)
+        tk.Button(goal_window, text="Edit Task", command=edit_task).pack(fill=tk.X)
+        tk.Button(goal_window, text="Remove Task", command=remove_task).pack(fill=tk.X)
+
+        # Save Changes Button
+        tk.Button(goal_window, text="Save Changes", command=save_changes, bg="green", fg="white").pack(fill=tk.X, pady=5)
 
         update_task_listbox()
 
