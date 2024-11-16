@@ -7,6 +7,7 @@ class Goal:
         self.title = title
         self.description = description
         self.recurrence = recurrence
+        self.tasks = []  # List to store tasks (up to 20)
 
 class GoalTrackerApp:
     def __init__(self, root):
@@ -111,7 +112,54 @@ class GoalTrackerApp:
         if recurrence:
             self.selected_goal.recurrence = recurrence
 
+        self.manage_tasks(self.selected_goal)
+
         self.update_goals_list()
+
+    def manage_tasks(self, goal):
+        task_window = Toplevel(self.root)
+        task_window.title(f"Manage Tasks for '{goal.title}'")
+
+        def update_task_listbox():
+            tasks_listbox.delete(0, tk.END)
+            for task in goal.tasks:
+                tasks_listbox.insert(tk.END, task)
+
+        def add_task():
+            if len(goal.tasks) >= 20:
+                messagebox.showerror("Error", "Maximum of 20 tasks allowed.")
+                return
+            task_desc = simpledialog.askstring("Add Task", "Enter task description:")
+            if task_desc:
+                goal.tasks.append(task_desc)
+                update_task_listbox()
+
+        def edit_task():
+            selected_task_index = tasks_listbox.curselection()
+            if not selected_task_index:
+                return
+            task_desc = simpledialog.askstring("Edit Task", "Edit task description:", initialvalue=goal.tasks[selected_task_index[0]])
+            if task_desc is not None:
+                goal.tasks[selected_task_index[0]] = task_desc
+                update_task_listbox()
+
+        def remove_task():
+            selected_task_index = tasks_listbox.curselection()
+            if not selected_task_index:
+                return
+            confirm = messagebox.askyesno("Delete Task", "Are you sure you want to delete this task?")
+            if confirm:
+                del goal.tasks[selected_task_index[0]]
+                update_task_listbox()
+
+        tasks_listbox = tk.Listbox(task_window, width=40)
+        tasks_listbox.pack(pady=10)
+
+        tk.Button(task_window, text="Add Task", command=add_task).pack(fill=tk.X)
+        tk.Button(task_window, text="Edit Task", command=edit_task).pack(fill=tk.X)
+        tk.Button(task_window, text="Remove Task", command=remove_task).pack(fill=tk.X)
+
+        update_task_listbox()
 
     def delete_goal(self):
         if self.selected_goal_index is not None:
