@@ -36,15 +36,21 @@ class GoalTracker:
         self.category_dropdown = tk.OptionMenu(self.goal_frame, self.category_var, "Weekly", "Monthly", "One-Time")
         self.category_dropdown.grid(row=2, column=1, sticky="w")
 
-        # Buttons for adding, editing, and deleting
-        self.add_button = tk.Button(self.goal_frame, text="Add Goal", command=self.add_goal)
-        self.add_button.grid(row=3, column=0, pady=5)
+        # Buttons for managing goals
+        self.goal_button_frame = tk.Frame(root)
+        self.goal_button_frame.pack(pady=5)
 
-        self.edit_button = tk.Button(self.goal_frame, text="Edit Goal", command=self.edit_goal)
-        self.edit_button.grid(row=3, column=1, pady=5)
+        self.add_button = tk.Button(self.goal_button_frame, text="Add Goal", command=self.add_goal)
+        self.add_button.pack(side="left", padx=5)
 
-        self.delete_button = tk.Button(self.goal_frame, text="Delete Goal", command=self.delete_goal)
-        self.delete_button.grid(row=3, column=2, pady=5)
+        self.edit_button = tk.Button(self.goal_button_frame, text="Edit Goal", command=self.edit_goal)
+        self.edit_button.pack(side="left", padx=5)
+
+        self.delete_button = tk.Button(self.goal_button_frame, text="Delete Goal", command=self.delete_goal)
+        self.delete_button.pack(side="left", padx=5)
+
+        self.toggle_goal_button = tk.Button(self.goal_button_frame, text="Toggle Goal Completion", command=self.toggle_goal_completion)
+        self.toggle_goal_button.pack(side="left", padx=5)
 
         # Listboxes
         tk.Label(root, text="Incomplete Goals:").pack(anchor="w", padx=10)
@@ -60,18 +66,20 @@ class GoalTracker:
         self.tasks_listbox = tk.Listbox(root, width=80, height=5)
         self.tasks_listbox.pack(pady=5)
 
-        self.add_task_button = tk.Button(root, text="Add Task", command=self.add_task)
+        task_button_frame = tk.Frame(root)
+        task_button_frame.pack(pady=5)
+
+        self.add_task_button = tk.Button(task_button_frame, text="Add Task", command=self.add_task)
         self.add_task_button.pack(side="left", padx=5)
 
-        self.mark_task_complete_button = tk.Button(root, text="Mark Task as Complete", command=self.mark_task_complete)
-        self.mark_task_complete_button.pack(side="left", padx=5)
+        self.edit_task_button = tk.Button(task_button_frame, text="Edit Task", command=self.edit_task)
+        self.edit_task_button.pack(side="left", padx=5)
 
-        # Mark as complete/incomplete buttons
-        self.complete_button = tk.Button(root, text="Mark Goal as Complete", command=self.mark_as_complete)
-        self.complete_button.pack(pady=5)
+        self.delete_task_button = tk.Button(task_button_frame, text="Delete Task", command=self.delete_task)
+        self.delete_task_button.pack(side="left", padx=5)
 
-        self.incomplete_button = tk.Button(root, text="Mark Goal as Incomplete", command=self.mark_as_incomplete)
-        self.incomplete_button.pack(pady=5)
+        self.toggle_task_button = tk.Button(task_button_frame, text="Toggle Task Completion", command=self.toggle_task_completion)
+        self.toggle_task_button.pack(side="left", padx=5)
 
         # Bind listbox selection to refresh tasks
         self.goals_listbox.bind("<<ListboxSelect>>", self.refresh_tasks)
@@ -84,7 +92,6 @@ class GoalTracker:
         title = self.title_entry.get().strip()
         description = self.description_entry.get().strip()
         category = self.category_var.get()
-        date = datetime.now().strftime("%Y-%m-%d")
 
         if not title:
             messagebox.showerror("Error", "Goal title cannot be empty.")
@@ -95,7 +102,6 @@ class GoalTracker:
             "description": description,
             "completed": False,
             "category": category,
-            "date": date,
             "times_completed": 0,
             "tasks": [],
         })
@@ -157,42 +163,59 @@ class GoalTracker:
             self.save_goals()
             self.refresh_tasks()
 
-    def mark_task_complete(self):
+    def edit_task(self):
         if not self.selected_goal:
-            messagebox.showerror("Error", "Please select a goal and a task to mark as complete.")
+            messagebox.showerror("Error", "Please select a goal to edit a task.")
             return
 
         selected_task = self.tasks_listbox.curselection()
         if not selected_task:
-            messagebox.showerror("Error", "Please select a task to mark as complete.")
+            messagebox.showerror("Error", "Please select a task to edit.")
             return
 
         task = self.selected_goal["tasks"][selected_task[0]]
-        task["completed"] = True
+        new_title = simpledialog.askstring("Edit Task", "New Task Title:", initialvalue=task["title"])
+        if new_title:
+            task["title"] = new_title
+            self.save_goals()
+            self.refresh_tasks()
+
+    def delete_task(self):
+        if not self.selected_goal:
+            messagebox.showerror("Error", "Please select a goal to delete a task from.")
+            return
+
+        selected_task = self.tasks_listbox.curselection()
+        if not selected_task:
+            messagebox.showerror("Error", "Please select a task to delete.")
+            return
+
+        del self.selected_goal["tasks"][selected_task[0]]
+        self.save_goals()
+        self.refresh_tasks()
+
+    def toggle_task_completion(self):
+        if not self.selected_goal:
+            messagebox.showerror("Error", "Please select a goal and a task to toggle completion.")
+            return
+
+        selected_task = self.tasks_listbox.curselection()
+        if not selected_task:
+            messagebox.showerror("Error", "Please select a task to toggle completion.")
+            return
+
+        task = self.selected_goal["tasks"][selected_task[0]]
+        task["completed"] = not task["completed"]
 
         self.save_goals()
         self.refresh_tasks()
 
-    def mark_as_complete(self):
+    def toggle_goal_completion(self):
         if not self.selected_goal:
-            messagebox.showerror("Error", "Please select a goal to mark as complete.")
+            messagebox.showerror("Error", "Please select a goal to toggle completion.")
             return
 
-        if not all(task["completed"] for task in self.selected_goal["tasks"]):
-            messagebox.showerror("Error", "All tasks must be completed before marking the goal as complete.")
-            return
-
-        self.selected_goal["completed"] = True
-        self.selected_goal["date"] = datetime.now().strftime("%Y-%m-%d")
-        self.save_goals()
-        self.refresh_goals()
-
-    def mark_as_incomplete(self):
-        if not self.selected_goal:
-            messagebox.showerror("Error", "Please select a completed goal to mark as incomplete.")
-            return
-
-        self.selected_goal["completed"] = False
+        self.selected_goal["completed"] = not self.selected_goal["completed"]
         self.save_goals()
         self.refresh_goals()
 
@@ -216,29 +239,25 @@ class GoalTracker:
         self.complete_goals_listbox.delete(0, tk.END)
 
         for goal in self.goals:
-            goal_display = f"{goal['title']} - {goal['description']} ({goal['category']})"
-            goal_display += f" [Date: {goal['date']}, Times Completed: {goal['times_completed']}]"
-
-            if goal["completed"]:
-                self.complete_goals_listbox.insert(tk.END, goal_display)
-            else:
-                self.goals_listbox.insert(tk.END, goal_display)
+            listbox = self.complete_goals_listbox if goal["completed"] else self.goals_listbox
+            listbox.insert(tk.END, f"{goal['title']} - {goal['category']}")
 
     def get_goal_from_index(self, listbox, index):
         title = listbox.get(index).split(" - ")[0]
         for goal in self.goals:
             if goal["title"] == title:
                 return goal
+        return None
+
+    def save_goals(self):
+        with open(self.DATA_FILE, "w") as file:
+            json.dump(self.goals, file, indent=4)
 
     def load_goals(self):
         if os.path.exists(self.DATA_FILE):
             with open(self.DATA_FILE, "r") as file:
                 return json.load(file)
         return []
-
-    def save_goals(self):
-        with open(self.DATA_FILE, "w") as file:
-            json.dump(self.goals, file, indent=4)
 
 
 if __name__ == "__main__":
