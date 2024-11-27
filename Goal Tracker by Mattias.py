@@ -4,6 +4,8 @@ import json
 import os
 from datetime import datetime, timedelta
 
+# Constants
+MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT = 600, 740
 
 class GoalTracker:
     DATA_FILE = "goals_with_tasks.json"
@@ -80,6 +82,13 @@ class GoalTracker:
 
         self.toggle_task_button = tk.Button(task_button_frame, text="Toggle Task Completion", command=self.toggle_task_completion)
         self.toggle_task_button.pack(side="left", padx=5)
+
+        tk.Label(text="").pack(padx=10)
+
+        tk.Button(text="Exit", command=root.quit, width=15).pack()
+
+        tk.Label(text="").pack(padx=10)
+
 
         # Bind listbox selection to refresh tasks
         self.goals_listbox.bind("<<ListboxSelect>>", self.refresh_tasks)
@@ -240,8 +249,7 @@ class GoalTracker:
 
         for goal in self.goals:
             listbox = self.complete_goals_listbox if goal["completed"] else self.goals_listbox
-            listbox.insert(tk.END, f"{goal['title']} - {goal['category']}")
-
+            listbox.insert(tk.END, f"{goal['title']} - {goal['category']} - {goal['description']}")
     def get_goal_from_index(self, listbox, index):
         title = listbox.get(index).split(" - ")[0]
         for goal in self.goals:
@@ -262,5 +270,6 @@ class GoalTracker:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.minsize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
     app = GoalTracker(root)
     root.mainloop()
