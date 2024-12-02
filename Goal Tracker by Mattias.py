@@ -89,7 +89,6 @@ class GoalTracker:
 
         tk.Label(text="").pack(padx=10)
 
-
         # Bind listbox selection to refresh tasks
         self.goals_listbox.bind("<<ListboxSelect>>", self.refresh_tasks)
         self.complete_goals_listbox.bind("<<ListboxSelect>>", self.refresh_tasks)
@@ -123,7 +122,7 @@ class GoalTracker:
         current_date = datetime.now()
         for goal in self.goals:
             if goal["category"] == "Weekly" and goal["completed"]:
-                last_completed_date = datetime.strptime(goal["date"], "%Y-%m-%d")
+                last_completed_date = datetime.strptime(goal.get("date", ""), "%Y-%m-%d")
                 if current_date - last_completed_date > timedelta(days=7):
                     goal["completed"] = False
                     goal["times_completed"] += 1
@@ -248,10 +247,12 @@ class GoalTracker:
         self.complete_goals_listbox.delete(0, tk.END)
 
         for goal in self.goals:
+            formatted_goal = f"{goal['title']} | {goal['description']} | ({goal['category']}) | (Completed {goal['times_completed']})"
             listbox = self.complete_goals_listbox if goal["completed"] else self.goals_listbox
-            listbox.insert(tk.END, f"{goal['title']} - {goal['category']} - {goal['description']}")
+            listbox.insert(tk.END, formatted_goal)
+
     def get_goal_from_index(self, listbox, index):
-        title = listbox.get(index).split(" - ")[0]
+        title = listbox.get(index).split(" | ")[0]
         for goal in self.goals:
             if goal["title"] == title:
                 return goal
