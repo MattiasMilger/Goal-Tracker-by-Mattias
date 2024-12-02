@@ -15,7 +15,7 @@ class GoalTracker:
         self.root.title("Goal Tracker")
 
         self.goals = self.load_goals()
-        self.reset_weekly_goals()
+        self.reset_goals()
 
         self.selected_goal = None
 
@@ -96,6 +96,27 @@ class GoalTracker:
         # Refresh UI
         self.refresh_goals()
 
+    def reset_goals(self):
+        current_date = datetime.now()
+        for goal in self.goals:
+            reset_needed = False
+            if goal["category"] == "Weekly":
+                last_reset_date = datetime.strptime(goal.get("last_reset_date", "1970-01-01"), "%Y-%m-%d")
+                if current_date - last_reset_date >= timedelta(days=7):
+                    reset_needed = True
+            elif goal["category"] == "Monthly":
+                last_reset_date = datetime.strptime(goal.get("last_reset_date", "1970-01-01"), "%Y-%m-%d")
+                if current_date.month != last_reset_date.month or current_date.year != last_reset_date.year:
+                    reset_needed = True
+
+            if reset_needed:
+                goal["completed"] = False
+                goal["tasks"] = [{"title": task["title"], "completed": False} for task in goal["tasks"]]
+                goal["times_completed"] += 1
+                goal["last_reset_date"] = current_date.strftime("%Y-%m-%d")
+
+        self.save_goals()
+
     def add_goal(self):
         title = self.title_entry.get().strip()
         description = self.description_entry.get().strip()
@@ -112,21 +133,12 @@ class GoalTracker:
             "category": category,
             "times_completed": 0,
             "tasks": [],
+            "last_reset_date": datetime.now().strftime("%Y-%m-%d"),
         })
         self.save_goals()
         self.refresh_goals()
         self.title_entry.delete(0, tk.END)
         self.description_entry.delete(0, tk.END)
-
-    def reset_weekly_goals(self):
-        current_date = datetime.now()
-        for goal in self.goals:
-            if goal["category"] == "Weekly" and goal["completed"]:
-                last_completed_date = datetime.strptime(goal.get("date", ""), "%Y-%m-%d")
-                if current_date - last_completed_date > timedelta(days=7):
-                    goal["completed"] = False
-                    goal["times_completed"] += 1
-        self.save_goals()
 
     def edit_goal(self):
         if not self.selected_goal:
