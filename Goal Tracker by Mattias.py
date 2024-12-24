@@ -35,13 +35,14 @@ class GoalTracker:
         # Goal category dropdown
         tk.Label(self.goal_frame, text="Category:").grid(row=2, column=0, sticky="w")
         self.category_var = tk.StringVar(value="Weekly")
-        self.category_dropdown = tk.OptionMenu(self.goal_frame, self.category_var, "Weekly", "Monthly", "One-Time")
+        self.category_dropdown = tk.OptionMenu(self.goal_frame, self.category_var,"Daily", "Weekly", "Monthly", "One-Time")
         self.category_dropdown.grid(row=2, column=1, sticky="w")
 
         # Buttons for managing goals
         self.goal_button_frame = tk.Frame(root)
         self.goal_button_frame.pack(pady=5)
-
+        
+        #Button for adding goal
         self.add_button = tk.Button(self.goal_button_frame, text="Add Goal", command=self.add_goal)
         self.add_button.pack(side="left", padx=5)
 
@@ -100,6 +101,10 @@ class GoalTracker:
         current_date = datetime.now()
         for goal in self.goals:
             reset_needed = False
+            if goal["category"] == "Daily":
+                last_reset_date = datetime.strptime(goal.get("last_reset_date", "1970-01-01"), "%Y-%m-%d")
+                if current_date - last_reset_date >= timedelta(days=1):
+                    reset_needed = True
             if goal["category"] == "Weekly":
                 last_reset_date = datetime.strptime(goal.get("last_reset_date", "1970-01-01"), "%Y-%m-%d")
                 if current_date - last_reset_date >= timedelta(days=7):
