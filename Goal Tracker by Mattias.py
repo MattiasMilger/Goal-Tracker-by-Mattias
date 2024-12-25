@@ -7,12 +7,21 @@ from datetime import datetime, timedelta
 # Constants
 MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT = 600, 740
 
+# Colors and Theme
+BACKGROUND_COLOR = "#2b2b2b"
+TEXT_COLOR = "#ffffff"
+ENTRY_COLOR = "#4a4a4a"
+BUTTON_COLOR = "#3a3a3a"
+
 class GoalTracker:
     DATA_FILE = "goals_with_tasks.json"
 
     def __init__(self, root):
+        # Tkinter setup
         self.root = root
         self.root.title("Goal Tracker")
+        root.minsize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
+        root.configure(bg=BACKGROUND_COLOR)
 
         self.goals = self.load_goals()
         self.reset_goals()
@@ -20,75 +29,83 @@ class GoalTracker:
         self.selected_goal = None
 
         # Frame for goal management
-        self.goal_frame = tk.Frame(root)
+        self.goal_frame = tk.Frame(root, bg=BACKGROUND_COLOR)
         self.goal_frame.pack(pady=10)
 
         # Entry fields
-        tk.Label(self.goal_frame, text="Goal Title:").grid(row=0, column=0, sticky="w")
-        self.title_entry = tk.Entry(self.goal_frame, width=30)
+        tk.Label(self.goal_frame, text="Goal Title:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, sticky="w")
+        self.title_entry = tk.Entry(self.goal_frame, width=30, bg=ENTRY_COLOR, fg=TEXT_COLOR, insertbackground=TEXT_COLOR)                                 
         self.title_entry.grid(row=0, column=1, padx=5)
 
-        tk.Label(self.goal_frame, text="Description:").grid(row=1, column=0, sticky="w")
-        self.description_entry = tk.Entry(self.goal_frame, width=30)
+        tk.Label(self.goal_frame, text="Description:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=1, column=0, sticky="w")
+        self.description_entry = tk.Entry(self.goal_frame, width=30, bg=ENTRY_COLOR, fg=TEXT_COLOR, insertbackground=TEXT_COLOR)
         self.description_entry.grid(row=1, column=1, padx=5)
 
         # Goal category dropdown
-        tk.Label(self.goal_frame, text="Category:").grid(row=2, column=0, sticky="w")
+        tk.Label(self.goal_frame, text="Category:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=2, column=0, sticky="w")
         self.category_var = tk.StringVar(value="Weekly")
-        self.category_dropdown = tk.OptionMenu(self.goal_frame, self.category_var,"Daily", "Weekly", "Monthly", "One-Time")
+        self.category_dropdown = tk.OptionMenu(self.goal_frame, self.category_var, "Daily", "Weekly", "Monthly", "One-Time")
         self.category_dropdown.grid(row=2, column=1, sticky="w")
+        # Customize the main button
+        self.category_dropdown.config(bg=BUTTON_COLOR, fg=TEXT_COLOR, activebackground=ENTRY_COLOR, activeforeground=TEXT_COLOR)
+
+        # Access the menu of the OptionMenu
+        menu = self.category_dropdown["menu"]
+
+        # Customize the dropdown menu colors
+        menu.config(bg=BACKGROUND_COLOR, fg=TEXT_COLOR, activebackground=ENTRY_COLOR, activeforeground=TEXT_COLOR)
 
         # Buttons for managing goals
-        self.goal_button_frame = tk.Frame(root)
+        self.goal_button_frame = tk.Frame(root, bg=BACKGROUND_COLOR)
         self.goal_button_frame.pack(pady=5)
         
         #Button for adding goal
-        self.add_button = tk.Button(self.goal_button_frame, text="Add Goal", command=self.add_goal)
+        self.add_button = tk.Button(self.goal_button_frame, text="Add Goal", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.add_goal)
         self.add_button.pack(side="left", padx=5)
 
-        self.edit_button = tk.Button(self.goal_button_frame, text="Edit Goal", command=self.edit_goal)
+        self.edit_button = tk.Button(self.goal_button_frame, text="Edit Goal", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.edit_goal)
         self.edit_button.pack(side="left", padx=5)
 
-        self.delete_button = tk.Button(self.goal_button_frame, text="Delete Goal", command=self.delete_goal)
+        self.delete_button = tk.Button(self.goal_button_frame, text="Delete Goal", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.delete_goal)
         self.delete_button.pack(side="left", padx=5)
 
-        self.toggle_goal_button = tk.Button(self.goal_button_frame, text="Toggle Goal Completion", command=self.toggle_goal_completion)
+        self.toggle_goal_button = tk.Button(self.goal_button_frame, text="Toggle Goal Completion", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.toggle_goal_completion)
         self.toggle_goal_button.pack(side="left", padx=5)
 
         # Listboxes
-        tk.Label(root, text="Incomplete Goals:").pack(anchor="w", padx=10)
-        self.goals_listbox = tk.Listbox(root, width=80, height=10)
+        tk.Label(root, text="Incomplete Goals:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).pack(anchor="w", padx=10)
+        self.goals_listbox = tk.Listbox(root, width=80, height=10, bg=ENTRY_COLOR, fg=TEXT_COLOR)
         self.goals_listbox.pack(pady=5)
 
-        tk.Label(root, text="Completed Goals:").pack(anchor="w", padx=10)
-        self.complete_goals_listbox = tk.Listbox(root, width=80, height=10)
+        tk.Label(root, text="Completed Goals:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).pack(anchor="w", padx=10)
+        self.complete_goals_listbox = tk.Listbox(root, width=80, height=10, bg=ENTRY_COLOR, fg=TEXT_COLOR)
         self.complete_goals_listbox.pack(pady=5)
 
         # Task List and controls
-        tk.Label(root, text="Tasks for Selected Goal:").pack(anchor="w", padx=10)
-        self.tasks_listbox = tk.Listbox(root, width=80, height=5)
+        tk.Label(root, text="Tasks for Selected Goal:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR                                                                                                                                                                                                                                                                                                                                ).pack(anchor="w", padx=10)
+        self.tasks_listbox = tk.Listbox(root, width=80, height=5, bg=ENTRY_COLOR, fg=TEXT_COLOR)
         self.tasks_listbox.pack(pady=5)
 
-        task_button_frame = tk.Frame(root)
+        task_button_frame = tk.Frame(root, bg=BACKGROUND_COLOR)
         task_button_frame.pack(pady=5)
 
-        self.add_task_button = tk.Button(task_button_frame, text="Add Task", command=self.add_task)
+        self.add_task_button = tk.Button(task_button_frame, text="Add Task", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.add_task)
         self.add_task_button.pack(side="left", padx=5)
 
-        self.edit_task_button = tk.Button(task_button_frame, text="Edit Task", command=self.edit_task)
+        self.edit_task_button = tk.Button(task_button_frame, text="Edit Task", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.edit_task)
         self.edit_task_button.pack(side="left", padx=5)
 
-        self.delete_task_button = tk.Button(task_button_frame, text="Delete Task", command=self.delete_task)
+        self.delete_task_button = tk.Button(task_button_frame, text="Delete Task", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.delete_task)
         self.delete_task_button.pack(side="left", padx=5)
 
-        self.toggle_task_button = tk.Button(task_button_frame, text="Toggle Task Completion", command=self.toggle_task_completion)
+        self.toggle_task_button = tk.Button(task_button_frame, text="Toggle Task Completion", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.toggle_task_completion)
         self.toggle_task_button.pack(side="left", padx=5)
 
-        tk.Label(text="").pack(padx=10)
+        tk.Label(text="", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).pack(padx=10)
 
-        tk.Button(text="Exit", command=root.quit, width=15).pack()
+        tk.Button(text="Exit", command=root.quit, width=15, bg=BUTTON_COLOR, fg=TEXT_COLOR).pack()
 
-        tk.Label(text="").pack(padx=10)
+        tk.Label(text="", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).pack(padx=10)
 
         # Bind listbox selection to refresh tasks
         self.goals_listbox.bind("<<ListboxSelect>>", self.refresh_tasks)
