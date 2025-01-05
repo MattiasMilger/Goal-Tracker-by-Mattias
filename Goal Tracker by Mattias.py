@@ -72,6 +72,9 @@ class GoalTracker:
         self.toggle_goal_button = tk.Button(self.goal_button_frame, text="Toggle Goal Completion", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.toggle_goal_completion)
         self.toggle_goal_button.pack(side="left", padx=5)
 
+        self.edit_times_completed_button = tk.Button(self.goal_button_frame, text="Edit Times Completed", bg=BUTTON_COLOR, fg=TEXT_COLOR, command=self.edit_times_completed)
+        self.edit_times_completed_button.pack(side="left", padx=5)
+
         # Listboxes
         tk.Label(root, text="Incomplete Goals:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).pack(anchor="w", padx=10)
         self.goals_listbox = tk.Listbox(root, width=80, height=10, bg=ENTRY_COLOR, fg=TEXT_COLOR)
@@ -181,6 +184,16 @@ class GoalTracker:
         self.refresh_goals()
         self.title_entry.delete(0, tk.END)
         self.description_entry.delete(0, tk.END)
+
+    def edit_times_completed(self):
+        if not self.selected_goal:
+            messagebox.showerror("Error", "Please select a goal to edit times completed.")
+        # Open a dialog to ask for a number
+        number = simpledialog.askfloat("Change Times Completed", "Enter a number:")
+        number = int(number) if number.is_integer() else number
+        self.selected_goal["times_completed"] = number
+        self.save_goals()
+        self.refresh_goals()
 
     def delete_goal(self):
         if not self.selected_goal:
